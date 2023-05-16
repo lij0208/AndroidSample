@@ -10,19 +10,26 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.androidsample"
+        applicationId "com.liz.androidsample"
         minSdk 24
         targetSdk 33
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "boolean", "DEBUG", "true"
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-debug.pro'
+            buildConfigField "boolean", "DEBUG", "true"
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "DEBUG", "false"
         }
     }
     compileOptions {
@@ -33,7 +40,8 @@ android {
         jvmTarget = '1.8'
     }
     buildFeatures {
-        viewBinding true
+        dataBinding true
+        buildConfig = true
     }
     hilt {
         enableAggregatingTask = true
@@ -41,6 +49,8 @@ android {
 }
 
 dependencies {
+//    implementation(project(":data"))
+//    implementation(project(":domain"))
 
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
