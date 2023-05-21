@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.example.androidsample'
+    namespace 'liz.android.sample'
     compileSdk 33
 
     defaultConfig {
