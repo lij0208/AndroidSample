@@ -1,6 +1,6 @@
 package com.liz.data.network
 
 enum class ApiType(val baseUrl: String) {
-    Test1(""),
+    NaverBlogSearch("https://openapi.naver.com"),
     Test2("")
 }

@@ -1,0 +1,2 @@
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }

@@ -2,7 +2,7 @@ package com.liz.data.di
 
 import com.liz.data.BuildConfig
 import com.liz.data.network.ApiType
-import com.liz.data.network.api.Test1Api
+import com.liz.data.network.api.NaverSearchApi
 import com.liz.data.network.api.Test2Api
 import dagger.Module
 import dagger.Provides
@@ -23,6 +23,7 @@ class NetworkModule {
     @Provides
     @Singleton
     fun okHttpCallFactory(): Call.Factory = OkHttpClient.Builder()
+        .followRedirects(true)
         .addInterceptor(
             HttpLoggingInterceptor()
                 .apply {
@@ -38,13 +39,13 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTest1Api(factory: Call.Factory): Test1Api {
+    fun provideNaverBlogSearchApi(factory: Call.Factory): NaverSearchApi {
         return Retrofit.Builder()
-            .baseUrl(ApiType.Test1.baseUrl)
+            .baseUrl(ApiType.NaverBlogSearch.baseUrl)
             .callFactory(factory)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(Test1Api::class.java)
+            .create(NaverSearchApi::class.java)
     }
 
     @Provides

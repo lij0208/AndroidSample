@@ -4,6 +4,9 @@ plugins {
     id 'kotlin-kapt'
 }
 
+def properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
 android {
     namespace 'com.liz.data'
     compileSdk 33
@@ -14,6 +17,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+        buildConfigField("String", "naver_client_id", properties.getProperty("NAVER_CLIENT_ID"))
+        buildConfigField("String", "naver_client_secret", properties.getProperty("NAVER_CLIENT_SECRET"))
         buildConfigField "boolean", "DEBUG", "true"
     }
 
