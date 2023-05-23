@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.liz.presentationn'
+    namespace 'com.liz.presentation'
     compileSdk 33
 
     defaultConfig {

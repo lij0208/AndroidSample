@@ -1,4 +1,4 @@
-package com.liz.androidsample
+package com.liz.presentation
 
 import org.junit.Test
 
