@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import com.liz.domain.common.Constant
 import com.liz.domain.param.SearchParam
 import com.liz.domain.usecase.SearchUseCase
-import com.liz.domain.common.Constant
 import com.liz.presentation.ui.search.actiondata.SearchAction
 import com.liz.presentation.ui.search.viewdata.SearchState
 import com.liz.presentation.ui.search.viewdata.SearchUi
@@ -16,9 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,9 +40,15 @@ class SearchViewModel @Inject constructor(
     private var job: Job? = null
     private var tempQuery: String = ""
 
-    private fun update(ui: SearchUi) {
+    private fun updateUi(ui: SearchUi) {
         viewModelScope.launch {
             _uiState.emit(ui)
+        }
+    }
+
+    private fun updateAction(action: SearchAction) {
+        viewModelScope.launch {
+            _action.emit(action)
         }
     }
 
@@ -63,17 +67,15 @@ class SearchViewModel @Inject constructor(
                         INIT_SORT
                     )
                 ).cachedIn(viewModelScope)
-                    .onEach {
-                        update(converter.convert(uiState.value, it))
-                    }.catch { error ->
-                        error.printStackTrace()
-                    }.collect()
+                    .collectLatest {
+                        updateUi(converter.convert(uiState.value, it))
+                    }
             }
         }
     }
 
     private fun updateEmptyQuery() {
-        update(
+        updateUi(
             uiState.value.copy(
                 state = SearchState.CLEAR_QUERY,
                 viewData = uiState.value.viewData.copy(
@@ -86,7 +88,7 @@ class SearchViewModel @Inject constructor(
     }
 
     private fun updateQuery() {
-        update(
+        updateUi(
             uiState.value.copy(
                 state = SearchState.UPDATE_QUERY,
                 viewData = uiState.value.viewData.copy(
@@ -119,6 +121,19 @@ class SearchViewModel @Inject constructor(
         search()
     }
 
+    fun updateError() {
+        updateUi(
+            uiState.value.copy(
+                state = SearchState.ERROR
+            )
+        )
+    }
+
+    fun updateLoading(isLoading: Boolean) {
+        updateAction(SearchAction.UpdateLoading(isLoading))
+    }
+
+
     override fun onCleared() {
         job?.cancel()
         job = null
@@ -126,7 +141,7 @@ class SearchViewModel @Inject constructor(
     }
 
     companion object {
-        private const val DISPLAY_PER_COUNT = 10
+        private const val DISPLAY_PER_COUNT = 20
         private const val START_POSITION = 1
         private const val INIT_SORT = "sim"
         private const val THROTTLE_SEC = 1000L

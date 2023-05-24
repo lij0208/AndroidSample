@@ -3,7 +3,6 @@ package com.liz.presentation.ui.search.adapter
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.liz.presentation.ui.search.adapter.holder.TitleViewHolder
 
