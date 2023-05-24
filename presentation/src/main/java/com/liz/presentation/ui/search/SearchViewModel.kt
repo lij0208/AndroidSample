@@ -48,7 +48,7 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun search() {
+    private fun search() {
         viewModelScope.launch {
             Log.d(Constant.TAG, tempQuery)
             if (tempQuery.isBlank()) {
@@ -111,6 +111,18 @@ class SearchViewModel @Inject constructor(
                 job = null
             }
         }
+    }
+
+    fun refresh() {
+        job?.cancel()
+        job = null
+        search()
+    }
+
+    override fun onCleared() {
+        job?.cancel()
+        job = null
+        super.onCleared()
     }
 
     companion object {

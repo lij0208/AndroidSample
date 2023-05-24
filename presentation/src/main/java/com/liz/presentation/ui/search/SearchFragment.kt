@@ -65,6 +65,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                         SearchState.INITIAL -> {
                             initRecyclerView()
                             initSearchView()
+                            initRefreshView()
                         }
                         SearchState.CLEAR_QUERY,
                         SearchState.SUCCESS -> success(it)
@@ -76,6 +77,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     }
 
     private suspend fun success(ui: SearchUi) {
+        binding.swiperefresh.isRefreshing = false
         ui.viewData.list?.let { list ->
             (binding.recyclerView.adapter as? SearchAdapter)?.submitData(list)
         } ?: (binding.recyclerView.adapter as? SearchAdapter)?.submitData(PagingData.empty())
@@ -97,5 +99,12 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                 return false
             }
         })
+    }
+
+    private fun initRefreshView() {
+        binding.swiperefresh.setOnRefreshListener {
+            binding.swiperefresh.isRefreshing = true
+            viewModel.refresh()
+        }
     }
 }
