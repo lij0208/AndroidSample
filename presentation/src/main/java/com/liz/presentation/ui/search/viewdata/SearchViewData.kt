@@ -4,5 +4,6 @@ import com.liz.presentation.ui.search.adapter.SearchRecyclerData
 
 data class SearchViewData(
     val list: List<SearchRecyclerData> = emptyList(),
-    val page: Int = 0
+    val page: Int = 0,
+    val query: String = ""
 )

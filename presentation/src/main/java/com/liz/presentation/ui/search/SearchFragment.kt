@@ -10,11 +10,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.liz.presentation.common.base.fragment.BaseFragment
 import com.liz.presentation.databinding.FragmentSearchBinding
-import com.liz.presentation.ui.search.actiondata.SearchAction
 import com.liz.presentation.ui.search.adapter.SearchAdapter
 import com.liz.presentation.ui.search.viewdata.SearchState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
@@ -45,9 +43,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     private fun collectAction() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.action.onEach {
-                when(it) {
-                    is SearchAction.EmptyQuery -> showToast("검색어를 입력해주세요")
-                }
+//                when (it) {
+//                }
             }.catch { error ->
                 error.printStackTrace()
             }.collect()
@@ -62,11 +59,12 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collectLatest {
-                    when(it.state) {
+                    when (it.state) {
                         SearchState.INITIAL -> {
                             initRecyclerView()
                             initSearchView()
                         }
+
                         SearchState.SUCCESS -> {
                             (binding.recyclerView.adapter as? SearchAdapter)?.submitList(it.viewData.list)
                         }
@@ -87,15 +85,10 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(1000)
-                    viewModel.search(
-                        newText
-                    )
-                }
+                viewModel.updateQuery(newText)
+                viewModel.searchAfterDelay()
                 return false
             }
         })
     }
-
 }

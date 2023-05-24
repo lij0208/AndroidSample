@@ -1,12 +1,17 @@
 package com.liz.presentation.ui.search
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.liz.domain.param.SearchParam
 import com.liz.domain.usecase.SearchUseCase
+import com.liz.presentation.common.Constant
 import com.liz.presentation.ui.search.actiondata.SearchAction
+import com.liz.presentation.ui.search.viewdata.SearchState
 import com.liz.presentation.ui.search.viewdata.SearchUi
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,20 +38,31 @@ class SearchViewModel @Inject constructor(
         SearchUi()
     )
 
+    private var job: Job? = null
+
     private fun update(ui: SearchUi) {
         viewModelScope.launch {
             _uiState.emit(ui)
         }
     }
 
-    fun search(query: String?) {
+    fun search() {
         viewModelScope.launch {
-            if (query.isNullOrBlank()) {
-                _action.emit(SearchAction.EmptyQuery)
+            Log.d(Constant.TAG, uiState.value.viewData.query)
+            if (uiState.value.viewData.query.isBlank()) {
+                update(
+                    uiState.value.copy(
+                        state = SearchState.SUCCESS,
+                        viewData = uiState.value.viewData.copy(
+                            list = emptyList(),
+                            page = 0
+                        )
+                    )
+                )
             } else {
                 searchUseCase(
                     SearchParam(
-                        query,
+                        uiState.value.viewData.query,
                         DISPLAY_PER_COUNT,
                         uiState.value.viewData.page + 1,
                         INIT_SORT
@@ -60,8 +76,29 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun updateQuery(query: String?) {
+        update(
+            uiState.value.copy(
+                viewData = uiState.value.viewData.copy(
+                    query = query ?: ""
+                )
+            )
+        )
+    }
+
+    fun searchAfterDelay() {
+        if (job == null) {
+            job = viewModelScope.launch {
+                delay(THROTTLE_SEC)
+                job = null
+                search()
+            }
+        }
+    }
+
     companion object {
         private const val DISPLAY_PER_COUNT = 10
         private const val INIT_SORT = "sim"
+        private const val THROTTLE_SEC = 1000L
     }
 }
