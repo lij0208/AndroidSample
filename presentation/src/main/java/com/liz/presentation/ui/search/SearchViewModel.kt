@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.liz.domain.param.SearchParam
 import com.liz.domain.usecase.SearchUseCase
+import com.liz.presentation.ui.search.actiondata.SearchAction
 import com.liz.presentation.ui.search.viewdata.SearchUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,6 +23,9 @@ class SearchViewModel @Inject constructor(
     private val converter: SearchConverter
 ) : ViewModel() {
 
+    private val _action = MutableSharedFlow<SearchAction>()
+    val action = _action
+
     private val _uiState = MutableSharedFlow<SearchUi>()
     val uiState: StateFlow<SearchUi> = _uiState.stateIn(
         viewModelScope,
@@ -35,20 +39,24 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun search(query: String) {
+    fun search(query: String?) {
         viewModelScope.launch {
-            searchUseCase(
-                SearchParam(
-                    query,
-                    DISPLAY_PER_COUNT,
-                    uiState.value.viewData.page + 1,
-                    INIT_SORT
-                )
-            ).onEach {
-                update(converter.convert(uiState.value, it))
-            }.catch { error ->
-                error.printStackTrace()
-            }.collect()
+            if (query.isNullOrBlank()) {
+                _action.emit(SearchAction.EmptyQuery)
+            } else {
+                searchUseCase(
+                    SearchParam(
+                        query,
+                        DISPLAY_PER_COUNT,
+                        uiState.value.viewData.page + 1,
+                        INIT_SORT
+                    )
+                ).onEach {
+                    update(converter.convert(uiState.value, it))
+                }.catch { error ->
+                    error.printStackTrace()
+                }.collect()
+            }
         }
     }
 
