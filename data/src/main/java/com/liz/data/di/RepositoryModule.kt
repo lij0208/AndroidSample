@@ -1,6 +1,6 @@
 package com.liz.data.di
 
-import com.liz.data.repository.SearchRepositoryImpl
+import com.liz.data.repository.NaverBlogSearchRepositoryImpl
 import com.liz.domain.repository.SearchRepository
 import dagger.Binds
 import dagger.Module
@@ -14,5 +14,5 @@ abstract class RepositoryModule {
 
     @Singleton
     @Binds
-    abstract fun bindSearchRepository(repository: SearchRepositoryImpl): SearchRepository
+    abstract fun bindSearchRepository(repository: NaverBlogSearchRepositoryImpl): SearchRepository
 }

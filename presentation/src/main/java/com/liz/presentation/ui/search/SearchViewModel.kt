@@ -3,9 +3,10 @@ package com.liz.presentation.ui.search
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.liz.domain.param.SearchParam
 import com.liz.domain.usecase.SearchUseCase
-import com.liz.presentation.common.Constant
+import com.liz.domain.common.Constant
 import com.liz.presentation.ui.search.actiondata.SearchAction
 import com.liz.presentation.ui.search.viewdata.SearchState
 import com.liz.presentation.ui.search.viewdata.SearchUi
@@ -39,6 +40,7 @@ class SearchViewModel @Inject constructor(
     )
 
     private var job: Job? = null
+    private var tempQuery: String = ""
 
     private fun update(ui: SearchUi) {
         viewModelScope.launch {
@@ -48,56 +50,72 @@ class SearchViewModel @Inject constructor(
 
     fun search() {
         viewModelScope.launch {
-            Log.d(Constant.TAG, uiState.value.viewData.query)
-            if (uiState.value.viewData.query.isBlank()) {
-                update(
-                    uiState.value.copy(
-                        state = SearchState.SUCCESS,
-                        viewData = uiState.value.viewData.copy(
-                            list = emptyList(),
-                            page = 0
-                        )
-                    )
-                )
+            Log.d(Constant.TAG, tempQuery)
+            if (tempQuery.isBlank()) {
+                updateEmptyQuery()
             } else {
+                updateQuery()
                 searchUseCase(
                     SearchParam(
-                        uiState.value.viewData.query,
+                        tempQuery,
                         DISPLAY_PER_COUNT,
-                        uiState.value.viewData.page + 1,
+                        START_POSITION,
                         INIT_SORT
                     )
-                ).onEach {
-                    update(converter.convert(uiState.value, it))
-                }.catch { error ->
-                    error.printStackTrace()
-                }.collect()
+                ).cachedIn(viewModelScope)
+                    .onEach {
+                        update(converter.convert(uiState.value, it))
+                    }.catch { error ->
+                        error.printStackTrace()
+                    }.collect()
             }
         }
     }
 
-    fun updateQuery(query: String?) {
+    private fun updateEmptyQuery() {
         update(
             uiState.value.copy(
+                state = SearchState.CLEAR_QUERY,
                 viewData = uiState.value.viewData.copy(
-                    query = query ?: ""
+                    list = null,
+                    page = START_POSITION,
+                    query = tempQuery
                 )
             )
         )
+    }
+
+    private fun updateQuery() {
+        update(
+            uiState.value.copy(
+                state = SearchState.UPDATE_QUERY,
+                viewData = uiState.value.viewData.copy(
+                    page = START_POSITION,
+                    query = tempQuery
+                )
+            )
+        )
+    }
+
+    fun updateTempQuery(query: String?) {
+        tempQuery = query ?: ""
     }
 
     fun searchAfterDelay() {
         if (job == null) {
             job = viewModelScope.launch {
                 delay(THROTTLE_SEC)
+                if (uiState.value.viewData.query != tempQuery) {
+                    search()
+                }
                 job = null
-                search()
             }
         }
     }
 
     companion object {
         private const val DISPLAY_PER_COUNT = 10
+        private const val START_POSITION = 1
         private const val INIT_SORT = "sim"
         private const val THROTTLE_SEC = 1000L
     }

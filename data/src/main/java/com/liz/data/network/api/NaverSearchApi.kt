@@ -8,7 +8,7 @@ import retrofit2.http.Query
 interface NaverSearchApi {
 
     @GET("/v1/search/blog.json")
-    suspend fun searchBlog(
+    suspend fun searchNaverBlog(
         @Header("X-Naver-Client-Id") id: String,
         @Header("X-Naver-Client-Secret") password: String,
         @Query("query") query: String,

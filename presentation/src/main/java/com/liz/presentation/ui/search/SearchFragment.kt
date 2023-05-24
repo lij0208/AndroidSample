@@ -8,10 +8,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.PagingData
 import com.liz.presentation.common.base.fragment.BaseFragment
 import com.liz.presentation.databinding.FragmentSearchBinding
 import com.liz.presentation.ui.search.adapter.SearchAdapter
 import com.liz.presentation.ui.search.viewdata.SearchState
+import com.liz.presentation.ui.search.viewdata.SearchUi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -64,14 +66,19 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                             initRecyclerView()
                             initSearchView()
                         }
-
-                        SearchState.SUCCESS -> {
-                            (binding.recyclerView.adapter as? SearchAdapter)?.submitList(it.viewData.list)
-                        }
+                        SearchState.CLEAR_QUERY,
+                        SearchState.SUCCESS -> success(it)
+                        else -> Unit
                     }
                 }
             }
         }
+    }
+
+    private suspend fun success(ui: SearchUi) {
+        ui.viewData.list?.let { list ->
+            (binding.recyclerView.adapter as? SearchAdapter)?.submitData(list)
+        } ?: (binding.recyclerView.adapter as? SearchAdapter)?.submitData(PagingData.empty())
     }
 
     private fun initRecyclerView() {
@@ -85,7 +92,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.updateQuery(newText)
+                viewModel.updateTempQuery(newText)
                 viewModel.searchAfterDelay()
                 return false
             }

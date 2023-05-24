@@ -1,4 +1,4 @@
-package com.liz.presentation.common
+package com.liz.domain.common
 
 object Constant {
     val TAG = "LIZ_TAG"

@@ -15,7 +15,7 @@ class TitleViewHolder(
     }
 
     fun bind(viewData: TitleViewData) {
-        binding.title.text = viewData.title
+        binding.title.text = "${bindingAdapterPosition + 1}. ${viewData.title}"
     }
 
     companion object {
