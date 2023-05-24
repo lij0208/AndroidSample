@@ -32,7 +32,7 @@ class NaverBlogSearchDataSource @Inject constructor(
                 BuildConfig.naver_client_id,
                 BuildConfig.naver_client_secret,
                 param.query,
-                param.display,
+                if (position == param.start) param.display * FIRST_DISPLAY_MULTIPLE else param.display,
                 position,
                 param.sort
             ).let {
@@ -42,10 +42,14 @@ class NaverBlogSearchDataSource @Inject constructor(
             LoadResult.Page(
                 data = repos,
                 prevKey = if (position == param.start) null else position - 1,
-                nextKey = if (response.display < param.display) null else position + 1
+                nextKey = if (response.display < param.display) null else position + (params.loadSize / param.display)
             )
         } catch (exception: Exception) {
             return LoadResult.Error(exception)
         }
+    }
+
+    companion object {
+        private const val FIRST_DISPLAY_MULTIPLE = 3
     }
 }
