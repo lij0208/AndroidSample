@@ -12,4 +12,5 @@
 실행하려면 local.properties에 아래의 값을 넣어야함. 보안문제로 ignore 처리함
 
 NAVER_CLIENT_ID = "{NAVER_CLIENT_ID}"
+
 NAVER_CLIENT_SECRET = "{NAVER_CLIENT_SECRET}"
