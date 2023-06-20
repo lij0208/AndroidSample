@@ -65,12 +65,7 @@ fun MainUi(
 }
 
 private fun setDrawableAction(navController: NavHostController, route: Route) {
-    when (route) {
-        Route.SEARCH -> navController.navigate(route.name) {
-            popUpTo(Route.SEARCH.name)
-        }
-        Route.TEST -> navController.navigate(route.name) {
-            popUpTo(Route.TEST.name)
-        }
+    navController.navigate(route.name) {
+        popUpTo(route.name)
     }
 }
