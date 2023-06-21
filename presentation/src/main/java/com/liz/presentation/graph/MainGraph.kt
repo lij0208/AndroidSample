@@ -9,7 +9,9 @@ import com.liz.presentation.ui.test.TestUi
 
 fun NavGraphBuilder.mainGraph(drawerState: DrawerState) {
     composable(Route.SEARCH.name) {
-        SearchUi(drawerState)
+        SearchUi(
+            drawerState = drawerState,
+        )
     }
     composable(Route.TEST.name) {
         TestUi(drawerState)

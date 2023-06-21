@@ -3,11 +3,12 @@ package com.liz.presentation.ui.search
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
 import com.liz.domain.common.Constant
 import com.liz.domain.param.SearchParam
 import com.liz.domain.usecase.SearchUseCase
 import com.liz.presentation.ui.search.actiondata.SearchAction
+import com.liz.presentation.ui.search.viewdata.END_POSITION
+import com.liz.presentation.ui.search.viewdata.START_POSITION
 import com.liz.presentation.ui.search.viewdata.SearchState
 import com.liz.presentation.ui.search.viewdata.SearchUi
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +17,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -52,48 +55,37 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    private fun search() {
+    private fun search(page: Int) {
         viewModelScope.launch {
+            val query = tempQuery
             Log.d(Constant.TAG, tempQuery)
-            if (tempQuery.isBlank()) {
-                updateEmptyQuery()
+            if (query.isBlank()) {
+                updateEmptyQuery(query)
             } else {
-                updateQuery()
-                searchUseCase(
-                    SearchParam(
-                        tempQuery,
-                        DISPLAY_PER_COUNT,
-                        START_POSITION,
-                        INIT_SORT
-                    )
-                ).cachedIn(viewModelScope)
-                    .collectLatest {
-                        updateUi(converter.convert(uiState.value, it))
-                    }
+                searchUseCase(createSearchParam(query, page)).onEach {
+                    updateUi(converter.convert(uiState.value, query, it))
+                }.catch { error ->
+                    updateError()
+                }.collect()
             }
         }
     }
 
-    private fun updateEmptyQuery() {
+    private fun createSearchParam(query: String, page: Int) = SearchParam(
+        query,
+        SearchConverter.DISPLAY_PER_COUNT,
+        page,
+        SearchConverter.INIT_SORT
+    )
+
+    private fun updateEmptyQuery(query: String) {
         updateUi(
             uiState.value.copy(
                 state = SearchState.CLEAR_QUERY,
                 viewData = uiState.value.viewData.copy(
                     list = null,
-                    page = START_POSITION,
-                    query = tempQuery
-                )
-            )
-        )
-    }
-
-    private fun updateQuery() {
-        updateUi(
-            uiState.value.copy(
-                state = SearchState.UPDATE_QUERY,
-                viewData = uiState.value.viewData.copy(
-                    page = START_POSITION,
-                    query = tempQuery
+                    page = END_POSITION,
+                    query = query
                 )
             )
         )
@@ -108,31 +100,48 @@ class SearchViewModel @Inject constructor(
             job = viewModelScope.launch {
                 delay(THROTTLE_SEC)
                 if (uiState.value.viewData.query != tempQuery) {
-                    search()
+                    updateUi(
+                        uiState.value.copy(
+                            state = SearchState.LOADING,
+                            viewData = uiState.value.viewData.copy(
+                                page = START_POSITION,
+                                list = null
+                            )
+                        )
+                    )
+                    search(START_POSITION)
                 }
                 job = null
             }
         }
     }
 
+    fun loadMore() {
+        search(uiState.value.viewData.page)
+    }
+
     fun refresh() {
         job?.cancel()
         job = null
-        search()
+        updateUi(
+            uiState.value.copy(
+                state = SearchState.LOADING,
+                viewData = uiState.value.viewData.copy(
+                    page = START_POSITION,
+                    list = null
+                )
+            )
+        )
+        search(START_POSITION)
     }
 
-    fun updateError() {
+    private fun updateError() {
         updateUi(
             uiState.value.copy(
                 state = SearchState.ERROR
             )
         )
     }
-
-    fun updateLoading(isLoading: Boolean) {
-        updateAction(SearchAction.UpdateLoading(isLoading))
-    }
-
 
     override fun onCleared() {
         job?.cancel()
@@ -141,9 +150,6 @@ class SearchViewModel @Inject constructor(
     }
 
     companion object {
-        private const val DISPLAY_PER_COUNT = 20
-        private const val START_POSITION = 1
-        private const val INIT_SORT = "sim"
         private const val THROTTLE_SEC = 1000L
     }
 }

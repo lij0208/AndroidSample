@@ -25,7 +25,7 @@ fun MainActivityPreview() {
             DrawerItemData(
                 Route.SEARCH,
                 R.string.menu_search,
-                R.drawable.ic_menu_gallery
+                R.drawable.reading_glasses
             )
         )
     )

@@ -21,12 +21,12 @@ class MainActivity : AppCompatActivity() {
                     DrawerItemData(
                         Route.SEARCH,
                         R.string.menu_search,
-                        R.drawable.ic_menu_gallery
+                        R.drawable.reading_glasses
                     ),
                     DrawerItemData(
                         Route.TEST,
                         R.string.menu_test,
-                        R.drawable.ic_launcher_foreground
+                        R.drawable.ic_menu_gallery
                     )
                 )
             )
